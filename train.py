@@ -5,12 +5,11 @@ Train a YOLOv5 model on a custom dataset. Models and datasets download automatic
 Usage - Single-GPU training:
     $ python train.py --data coco128.yaml --weights yolov5s.pt --img 640  # from pretrained (recommended)
     $ python train.py --data coco128.yaml --weights '' --cfg yolov5s.yaml --img 640  # from scratch
-    python train.py --data  bowl-1/data.yaml --weights yolov5s.pt --img 640
-    python detectWithCoordinates.py --weights runs/train/exp6/weights/best.pt --source testReal.mp4
-
+    python train.py --data  bowl-2/data.yaml --weights yolov5s.pt --img 640
+     python train.py --data  bowl-2/data.yaml --weights yolov5s.pt --img 640
 Usage - Multi-GPU DDP training:
     $ python -m torch.distributed.run --nproc_per_node 4 --master_port 1 train.py --data coco128.yaml --weights yolov5s.pt --img 640 --device 0,1,2,3
-
+    python -m torch.distributed.run --nproc_per_node 4 --master_port 1 train.py --data bowl-2/data.yaml --weights yolov5s.pt --img 640 --device 0,1
 Models:     https://github.com/ultralytics/yolov5/tree/master/models
 Datasets:   https://github.com/ultralytics/yolov5/tree/master/data
 Tutorial:   https://docs.ultralytics.com/yolov5/tutorials/train_custom_data

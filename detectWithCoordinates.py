@@ -2,6 +2,12 @@
 """
 Run YOLOv5 detection inference on images, videos, directories, globs, YouTube, webcam, streams, etc.
 
+python detectWithCoordinates.py --weights runs/train/exp6/weights/best.pt --source shot1.avi --classes 0 <-- Ball
+python detectWithCoordinates.py --weights runs/train/exp6/weights/best.pt --source testReal.mp4
+python detectWithCoordinates.py --weights runs/train/exp6/weights/best.pt --source curveedit.mp4
+
+
+
 Usage - sources:
     $ python detect.py --weights yolov5s.pt --source 0                               # webcam
                                                      img.jpg                         # image
@@ -39,6 +45,8 @@ import matplotlib.pyplot as plt
 
 import torch
 from matplotlib import image as mpimg
+
+import utils
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -85,7 +93,7 @@ def run(
         save_conf=False,  # save confidences in --save-txt labels
         save_crop=False,  # save cropped prediction boxes
         nosave=False,  # do not save images/videos
-        classes=None,  # filter by class: --class 0, or --class 0 2 3
+        classes=True,  # filter by class: --class 0, or --class 0 2 3
         agnostic_nms=False,  # class-agnostic NMS
         augment=False,  # augmented inference
         visualize=True,  # visualize features
@@ -112,7 +120,6 @@ def run(
     # Directories
     save_dir = increment_path(Path(project) / name, exist_ok=exist_ok)  # increment run
     (save_dir / "labels" if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
-
     # Load model
     device = select_device(device)
     model = DetectMultiBackend(weights, device=device, dnn=dnn, data=data, fp16=half)
@@ -194,13 +201,16 @@ def run(
 
             p = Path(p)  # to Path
             save_path = str(save_dir / p.name)  # im.jpg
-            img_path = save_dir / "image.jpg"
+            if frame == 2:
+                img_path = save_dir / f'frame_{frame}.png'
             txt_path = str(save_dir / "labels" / p.stem) + ("" if dataset.mode == "image" else f"_{frame}")  # im.txt
             s += "%gx%g " % im.shape[2:]  # print string
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             imc = im0.copy() if save_crop else im0  # for save_crop
             annotator = Annotator(im0, line_width=line_thickness, example=str(names))
             if len(det):
+
+
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_boxes(im.shape[2:], det[:, :4], im0.shape).round()
 
@@ -262,7 +272,8 @@ def run(
                 if dataset.mode == "image":
                     cv2.imwrite(save_path, im0)
                 else:  # 'video' or 'stream'
-                    cv2.imwrite(img_path, im0)
+                    if frame == 2:
+                        cv2.imwrite(img_path, im0)
                     if vid_path[i] != save_path:  # new video
                         vid_path[i] = save_path
                         if isinstance(vid_writer[i], cv2.VideoWriter):
@@ -291,11 +302,11 @@ def run(
         strip_optimizer(weights[0])  # update model (to fix SourceChangeWarning)
 
     print("Writing...Plotting")
-    plot = f'{save_dir}\\plot_image.png'
+    plot = f'{save_dir}/plot_image.png'
 
     # Plot your data points
     # plt.plot(x_list, y_list, marker='o')  # 'o' specifies points on the graph
-    plt.plot(x_list, y_list, marker='o', color='blue')  # Points blue
+    plt.plot(x_list, y_list, marker='o', color='blue', markersize=2)  # Points blue
     plt.plot(x_list, y_list, color='orange')  # Lines  in orange
     plt.title('Plot of Points')
     plt.xlabel('X-axis')
@@ -303,14 +314,18 @@ def run(
 
     plt.grid(True)  # Add grid lines
     # Load the background image
-    background_image = mpimg.imread(img_path)
+    background_image = mpimg.imread(save_dir / 'frame_2.png')
     plt.gca().invert_xaxis()
     plt.gca().invert_yaxis()
     # Set the background image
     plt.imshow(background_image, extent=[0, w, h, 0])
 
     plt.savefig(plot)
-    plt.show()
+    cv2.imshow('plot', cv2.imread(plot))
+    key = cv2.waitKey(60000)
+    if key == 27:  # Check if the Esc key is pressed (ASCII code for Esc)
+        cv2.destroyAllWindows()
+    cv2.destroyAllWindows()
 
 def parse_opt():
     """Parses command-line arguments for YOLOv5 detection, setting inference options and model configurations."""
